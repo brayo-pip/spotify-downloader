@@ -180,6 +180,10 @@ class SongObj:
 
         return self.__rawTrackMeta["album"]["release_date"]
 
+    def is_explicit(self) -> bool:
+        """ returns a bool value"""
+        return self.__rawTrackMeta["explicit"]
+
     #! Utilities for genuine use and also for metadata freaks:
 
     #! 1. Album Art URL
