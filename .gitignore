@@ -26,3 +26,4 @@ build/*
 dist/*
 venv
 .idea
+spotdl/test.py

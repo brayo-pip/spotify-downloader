@@ -202,7 +202,7 @@ def download_song(songObj: SongObj, displayManager: DisplayManager = None,
 
     #! spotify link: in case you wanna re-download your whole offline library,
     #! you can just read the links from the tags and redownload the songs.
-    audioFile['website'] = songObj.get_spotify_link()
+#    audioFile['website'] = songObj.get_spotify_link()
 
     #! save as both ID3 v2.3 & v2.4 as v2.3 isn't fully features and
     #! windows doesn't support v2.4 until later versions of Win10
@@ -211,7 +211,7 @@ def download_song(songObj: SongObj, displayManager: DisplayManager = None,
     #! setting the album art
     audioFile = ID3(convertedFilePath)
 
-    rawAlbumArt = urlopen(songObj.get_album_cover_url()).read()
+    rawAlbumArt = get(songObj.get_album_cover_url()).content
 
     audioFile['APIC'] = AlbumCover(
         encoding = 3,
@@ -223,7 +223,7 @@ def download_song(songObj: SongObj, displayManager: DisplayManager = None,
 
     #! adding lyrics
     try:
-        lyrics = songObj.get_song_lyrics()
+        lyrics = songObj.get_lyrics()
         USLTOutput = USLT(encoding=3, lang=u'eng', desc=u'desc', text=lyrics)
         audioFile["USLT::'eng'"] = USLTOutput
     except:
