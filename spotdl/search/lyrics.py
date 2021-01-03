@@ -7,7 +7,7 @@ base_search_url = base_url + "/api/search/multi?per_page=1&q="
 
 class Genius:
     @classmethod
-    def from_query(self, artist, song, lyric_fail=True) -> str:
+    def from_query(self, artist, song, lyric_fail=False) -> str:
         """
         Returns the lyrics as a string \n
         set lyric fail to false if you prefer no lyrics
@@ -24,8 +24,10 @@ class Genius:
             + response_json["response"]["sections"][0]["hits"][0]["result"]["path"]
         )
 
-        if not lyric_url.endswith("lyrics") and lyric_fail:
+        if not lyric_url.endswith("lyrics"):
             print(f"Possible lyric failure, for {artist} {song}")
+            if not lyric_fail:
+                return ""
         elif not lyric_url.endswith("lyrics"):
             return ""
 
