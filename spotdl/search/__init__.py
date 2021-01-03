@@ -2,7 +2,8 @@ __all__ = [
     'provider',
     'songObj',
     'spotifyClient',
-    'utils'
+    'utils',
+    'lyrics'
 ]
 
 #! You should be able to do all you want with just theese three lines

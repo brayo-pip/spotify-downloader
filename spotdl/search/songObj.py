@@ -1,6 +1,6 @@
 from spotdl.search.provider import search_and_get_best_match
 from spotdl.search.spotifyClient import get_spotify_client
-from spotdl.search.genius import Genius
+from spotdl.search.lyrics import Genius
 
 from os.path import join
 
