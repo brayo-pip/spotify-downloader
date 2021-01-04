@@ -11,6 +11,7 @@ from typing import List
 from rapidfuzz.fuzz import partial_ratio
 from ytmusicapi import YTMusic
 
+# from spotdl.search.songObj import SongObj
 
 # ================================
 # === Note to readers / Coders ===
@@ -101,7 +102,7 @@ def __map_result_to_song_data(result: dict) -> dict:
     return song_data
 
 
-def __query_and_simplify(searchTerm: str) -> List[dict]:
+def __query_and_simplify(searchTerm: str, explicit:bool) -> List[dict]:
     '''
     `str` `searchTerm` : the search term you would type into YTM's search bar
 
@@ -114,7 +115,8 @@ def __query_and_simplify(searchTerm: str) -> List[dict]:
     # ! function ain't soo big, there are plenty of comments and blank lines
 
     # build and POST a query to YTM
-
+    if explicit:
+        searchTerm += " Explicit"
     print(f'Searching for: {searchTerm}')
     searchResult = ytmApiClient.search(searchTerm, filter='videos')
 
@@ -126,7 +128,7 @@ def __query_and_simplify(searchTerm: str) -> List[dict]:
 # =======================
 
 def search_and_order_ytm_results(songName: str, songArtists: List[str],
-                                 songAlbumName: str, songDuration: int) -> dict:
+                                 songAlbumName: str, songDuration: int , explicit:bool) -> dict:
     '''
     `str` `songName` : name of song
 
@@ -143,7 +145,7 @@ def search_and_order_ytm_results(songName: str, songArtists: List[str],
     that $matchValue can take is 100, the least value is unbound.
     '''
     # Query YTM
-    results = __query_and_simplify(get_ytm_search_query(songName, songArtists))
+    results = __query_and_simplify(get_ytm_search_query(songName, songArtists),explicit)
 
     # Assign an overall avg match value to each result
     linksWithMatchValue = {}
@@ -235,7 +237,7 @@ def get_ytm_search_query(songName: str, songArtists: List[str]) -> str:
 
 
 def search_and_get_best_match(songName: str, songArtists: List[str],
-                              songAlbumName: str, songDuration: int) -> str:
+                              songAlbumName: str, songDuration: int, explicit: bool) -> str:
     '''
     `str` `songName` : name of song
 
@@ -251,7 +253,7 @@ def search_and_get_best_match(songName: str, songArtists: List[str],
     # ! This is lazy coding, sorry.
     results = search_and_order_ytm_results(
         songName, songArtists,
-        songAlbumName, songDuration
+        songAlbumName, songDuration, explicit
     )
 
     if len(results) == 0:

@@ -61,7 +61,7 @@ class SongObj:
             contributingArtists.append(artist["name"])
 
         youtubeLink = SongObj.searchProvider(
-            songName, contributingArtists, albumName, duration
+            songName, contributingArtists, albumName, duration , explicit = rawTrackMeta["explicit"] 
         )
 
         youtubeLink = youtubeLink
