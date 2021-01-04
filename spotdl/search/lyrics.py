@@ -25,7 +25,7 @@ class Genius:
         )
 
         if not lyric_url.endswith("lyrics"):
-            print(f"Possible lyric failure, for {artist} {song}")
+            print(f"\nPossible lyric failure, for {artist} {song}")
             if not lyric_fail:
                 return ""
         elif not lyric_url.endswith("lyrics"):
