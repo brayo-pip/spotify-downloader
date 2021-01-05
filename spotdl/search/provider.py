@@ -8,7 +8,7 @@ from time import strptime
 from typing import List
 
 # ! the following are for the search provider to function
-from rapidfuzz.fuzz import partial_ratio
+from rapidfuzz.fuzz import WRatio
 from ytmusicapi import YTMusic
 
 # from spotdl.search.songObj import SongObj
@@ -38,16 +38,16 @@ def match_percentage(str1: str, str2: str, score_cutoff: float = 0) -> float:
 
     RETURNS `float`
 
-    A wrapper around `rapidfuzz.fuzz.partial_ratio` to handle UTF-8 encoded
+    A wrapper around `rapidfuzz.fuzz.WRatio` to handle UTF-8 encoded
     emojis that usually cause errors
     '''
 
     # ! this will throw an error if either string contains a UTF-8 encoded emoji
     try:
-        return partial_ratio(str1, str2, score_cutoff=score_cutoff)
+        return WRatio(str1, str2, score_cutoff=score_cutoff)
 
     # ! we build new strings that contain only alphanumerical characters and spaces
-    # ! and return the partial_ratio of that
+    # ! and return the WRatio of that
     except:
         newStr1 = ''
 
@@ -61,7 +61,7 @@ def match_percentage(str1: str, str2: str, score_cutoff: float = 0) -> float:
             if eachLetter.isalnum() or eachLetter.isspace():
                 newStr2 += eachLetter
 
-        return partial_ratio(newStr1, newStr2, score_cutoff=score_cutoff)
+        return WRatio(newStr1, newStr2, score_cutoff=score_cutoff)
 
 
 # ========================================================================
@@ -169,9 +169,11 @@ def search_and_order_ytm_results(songName: str, songArtists: List[str],
         commonWord = False
 
         # ! check for common word
+        # ! break if there's any shared commonWord
         for word in sentenceAWords:
             if word != '' and word in lowerResultName:
                 commonWord = True
+                break
 
         # ! if there are no common words, skip result
         if not commonWord:
