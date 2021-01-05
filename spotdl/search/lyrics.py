@@ -19,17 +19,19 @@ class Genius:
         search_url = base_search_url + encoded_query
         response_json = get(search_url).json()
         # print(response_json['response']['sections'][0]['hits'][0]['result'])
-        lyric_url = (
-            base_url
-            + response_json["response"]["sections"][0]["hits"][0]["result"]["path"]
-        )
+        try:
+            lyric_url = (
+                base_url
+                + response_json["response"]["sections"][0]["hits"][0]["result"]["path"]
+            )
+        except:
+            print("\nNo hits for lyric query")
+            return ""
 
         if not lyric_url.endswith("lyrics"):
             print(f"\nPossible lyric failure, for {artist} {song}")
             if not lyric_fail:
                 return ""
-        elif not lyric_url.endswith("lyrics"):
-            return ""
 
         return self.from_url(lyric_url)
 
@@ -45,7 +47,7 @@ class Genius:
         soup = BeautifulSoup(get(url).content, features="lxml")
         retries = 10
         lyrics = soup.html.p.text
-        while retries > 0 and lyrics == "Produced by" or lyrics == "Featuring":
+        while retries > 0 and len(lyrics)<100:
             # time.sleep(0.5)
             soup = BeautifulSoup(get(url).content, features="lxml")
             lyrics = soup.html.p.text
