@@ -116,7 +116,7 @@ def __query_and_simplify(searchTerm: str, explicit:bool) -> List[dict]:
 
     # build and POST a query to YTM
     if explicit:
-        searchTerm += " Explicit"
+        searchTerm += " Lyrics"
     print(f'Searching for: {searchTerm}')
     searchResult = ytmApiClient.search(searchTerm, filter='videos')
 
