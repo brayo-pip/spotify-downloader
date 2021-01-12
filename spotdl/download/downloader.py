@@ -124,7 +124,8 @@ def download_song(songObj: SongObj, displayManager: DisplayManager = None,
         #! This is equivalent to a failed download, we do nothing, the song remains on
         #! downloadTrackers download queue and all is well...
         #!
-        #! None is again used as a convenient exit
+        #! None is again used as a convenient exit'
+        print("Fetch fail")
         remove(join(tempFolder, convertedFileName) + '.mp4')
         return None
     
@@ -148,11 +149,10 @@ def download_song(songObj: SongObj, displayManager: DisplayManager = None,
     #! sampled length of songs matches the actual length (i.e. a 5 min song won't display
     #! as 47 seconds long in your music player, yeah that was an issue earlier.)
 
-    command = 'ffmpeg  -v quiet -hwaccel_output_format cuda -y -i "%s" -acodec libmp3lame -abr true  "%s"'
-    formattedCommand = command % (downloadedFilePath, convertedFilePath)
+    command = f'ffmpeg  -v quiet -hwaccel_output_format cuda -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af loudnorm=I=-7 "{convertedFilePath}"'
 
     return_code = None
-    return_code = call(formattedCommand)
+    return_code = call(command)
 
     if return_code != 0:
         raise("Error occurred during conversion, ffmpeg issue probably")
