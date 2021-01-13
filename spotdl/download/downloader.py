@@ -12,6 +12,7 @@ from pytube import YouTube
 
 from mutagen.easyid3 import EasyID3, ID3
 from mutagen.id3 import APIC as AlbumCover
+from mutagen.id3 import USLT
 
 from requests import get
 
@@ -209,11 +210,9 @@ class DownloadManager():
         # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
         # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
 
-        command = 'ffmpeg -v quiet -y -i "%s" -acodec libmp3lame -abr true ' \
-                  '-af "apad=pad_dur=2, dynaudnorm, loudnorm=I=-17" "%s"'
-        formattedCommand = command % (downloadedFilePath, convertedFilePath)
+        command = f'ffmpeg -v quiet -hwaccel_output_format cuda -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2, dynaudnorm, loudnorm=I=-17" "{convertedFilePath}"'
 
-        process = await asyncio.subprocess.create_subprocess_shell(formattedCommand)
+        process = await asyncio.subprocess.create_subprocess_shell(command)
         _ = await process.communicate()
 
         # ! Wait till converted file is actually created
@@ -268,7 +267,7 @@ class DownloadManager():
         # ! setting the album art
         audioFile = ID3(convertedFilePath)
 
-        rawAlbumArt = get(songObj.get_album_cover_url()).content
+        rawAlbumArt = get(songObj.get_album_cover_url()).content 
 
         audioFile['APIC'] = AlbumCover(
             encoding=3,
