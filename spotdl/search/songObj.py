@@ -147,6 +147,9 @@ class SongObj:
 
         return contributingArtists
 
+    def get_link(self) ->str:
+        url = 'https://open.spotify.com/track/' + self.__rawTrackMeta['id']
+        return url
     #! Album Details:
 
     #! 1. Name
