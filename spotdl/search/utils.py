@@ -2,7 +2,21 @@ from spotdl.search.spotifyClient import get_spotify_client
 from spotdl.search.songObj import SongObj
 
 from typing import List
+import bisect
+# path = "C:/Users/Awesome/OneDrive/Documents/unique-links.txt"
+path = "C:/Users/Awesome/Google Drive/Desktop/unique-links.txt"
+file = open(path,'r')
 
+links =[line[:len(line)-1] for line in file]
+
+links.sort()
+
+def song_present(url: str):
+    if bisect.bisect_left(links,url) != len(links):
+        if links[bisect.bisect_left(links,url)] == url:
+            return True
+    return False
+#TODO: skip songs from the skip file
 def search_for_song(query: str) ->  SongObj:
     '''
     `str` `query` : what you'd type into spotify's search box
@@ -39,27 +53,36 @@ def get_album_tracks(albumUrl: str) -> List[SongObj]:
 
     spotifyClient = get_spotify_client()
     albumTracks = []
-
+    albumUrls = []
     trackResponse = spotifyClient.album_tracks(albumUrl)
 
     # while loop acts like do-while
+    offset = 0
     while True:
 
         for track in trackResponse['items']:
-            song = SongObj.from_url('https://open.spotify.com/track/' + track['id'])
+            url = 'https://open.spotify.com/track/' + track['id']
+            if song_present(url):
+                # the link is present in the skip file
+                continue
+            else:
+                albumUrls.append(url)
 
-            if song.get_youtube_link() != None:
-                albumTracks.append(song)
-
+        offset += 100
         # check if more tracks are to be passed
         if trackResponse['next']:
             trackResponse = spotifyClient.album_tracks(
                 albumUrl,
-                offset = len(albumTracks)
+                offset = offset
             )
         else:
             break
+    for url in albumUrls:
+        song = SongObj.from_url(url)
+        if song.get_youtube_link() != None:
+            albumTracks.append(song)
 
+    print(len(albumTracks))
     return albumTracks
 
 def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
@@ -72,31 +95,41 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
 
     spotifyClient = get_spotify_client()
     playlistTracks = []
+    playlistUrls = []
 
     playlistResponse = spotifyClient.playlist_tracks(playlistUrl)
 
     # while loop to mimic do-while
+    offset = 0
     while True:
-
         for songEntry in playlistResponse['items']:
-            song = SongObj.from_url(
-                'https://open.spotify.com/track/' + songEntry['track']['id'])
-
-            if song.get_youtube_link() != None:
-                playlistTracks.append(song)
-
+            url = 'https://open.spotify.com/track/' + songEntry['track']['id']
+            if song_present(url):
+                # the link is present in the skip file
+                continue
+            else:
+                playlistUrls.append(url)
+        offset += 100    
         # check if more tracks are to be passed
         if playlistResponse['next']:
+            print(f"fetching next, offset is {offset}")
             playlistResponse = spotifyClient.playlist_tracks(
                 playlistUrl,
-                offset = len(playlistTracks)
+                offset = offset
             )
         else:
             break
+    for url in playlistUrls:
+        song = SongObj.from_url(url)
 
+        if song.get_youtube_link() != None:
+            playlistTracks.append(song)
+
+        
+    print(len(playlistTracks))
     return playlistTracks
 
-
+#TODO: skip songs from the skip file
 def get_artist_tracks(artistUrl: str) -> List[SongObj]:
     '''
     `str` `artistUrl` : Spotify Url of the artist whose tracks are to be
