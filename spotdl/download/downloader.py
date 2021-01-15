@@ -276,7 +276,9 @@ class DownloadManager():
             desc='Cover',
             data=rawAlbumArt
         )
-
+        lyrics = songObj.get_song_lyrics()
+        USLTOutput = USLT(encoding=3, lang=u'eng', desc=u'desc', text=lyrics)
+        audioFile["USLT::'eng'"] = USLTOutput
         audioFile.save(v2_version=3)
 
         # Do the necessary cleanup
