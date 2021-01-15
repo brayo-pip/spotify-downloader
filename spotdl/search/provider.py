@@ -115,10 +115,13 @@ def __query_and_simplify(searchTerm: str, explicit:bool) -> List[dict]:
     # ! function ain't soo big, there are plenty of comments and blank lines
 
     # build and POST a query to YTM
-    if explicit:
-        searchTerm += ""
+    # if explicit:
+    #     searchTerm += ""
     print(f'Searching for: {searchTerm}')
-    searchResult = ytmApiClient.search(searchTerm, filter='videos')[:3]
+    if explicit:
+        searchResult = ytmApiClient.search(searchTerm, filter='videos')[:3]
+    else:
+        searchResult = ytmApiClient.search(searchTerm,filter='videos')[:5]
 
     return list(map(__map_result_to_song_data, searchResult))
 
@@ -200,9 +203,9 @@ def search_and_order_ytm_results(songName: str, songArtists: List[str],
         # ! Skip if there are no artists in common, (else, results like 'Griffith Swank -
         # ! Madness' will be the top match for 'Ruelle - Madness')
         if artistMatchNumber == 0:
-            continue
-
-        artistMatch = (artistMatchNumber / len(songArtists)) * 100
+            artistMatch = 0
+        else:
+            artistMatch = (artistMatchNumber / len(songArtists)) * 100
 
         # Find name match
         nameMatch = round(match_percentage(result['name'], songName), ndigits=3)
@@ -234,7 +237,7 @@ def search_and_order_ytm_results(songName: str, songArtists: List[str],
 
 
 def get_ytm_search_query(songName: str, songArtists: List[str]) -> str:
-    joined_artists = ', '.join(songArtists)
+    joined_artists = songArtists[0]
     return f'{joined_artists} - {songName}'
 
 

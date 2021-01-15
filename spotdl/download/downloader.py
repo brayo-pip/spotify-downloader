@@ -22,14 +22,15 @@ from typing import List
 from spotdl.search.songObj import SongObj
 from spotdl.download.progressHandlers import DisplayManager, DownloadTracker
 
+from spotdl.search.utils import path
 
 
 #==========================
 #=== Base functionality ===
 #==========================
 
-
-
+path = path
+skipfile = open(path, 'a')
 #===========================================================
 #=== The Download Manager (the tyrannical boss lady/guy) ===
 #===========================================================
@@ -43,6 +44,7 @@ class DownloadManager():
         # start a server for objects shared across processes
         self.displayManager = DisplayManager()
         self.downloadTracker = DownloadTracker()
+        self.skipfile = skipfile
 
         self.displayManager.clear()
 
@@ -344,3 +346,4 @@ class DownloadManager():
         tasks = [self._pool_download(song) for song in song_obj_list]
         # call all task asynchronously, and wait until all are finished
         self.loop.run_until_complete(asyncio.gather(*tasks))
+        self.skipfile.close()
