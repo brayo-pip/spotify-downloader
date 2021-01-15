@@ -16,7 +16,6 @@ def song_present(url: str):
         if links[bisect.bisect_left(links,url)] == url:
             return True
     return False
-#TODO: skip songs from the skip file
 def search_for_song(query: str) ->  SongObj:
     '''
     `str` `query` : what you'd type into spotify's search box
@@ -36,6 +35,9 @@ def search_for_song(query: str) ->  SongObj:
     else:
         for songResult in result['tracks']['items']:
             songUrl = 'http://open.spotify.com/track/' + songResult['id']
+            if song_present(songUrl):
+                "song matches skipped, already in skip file"
+                continue
             song = SongObj.from_url(songUrl)
 
             if song.get_youtube_link() != None:
@@ -82,7 +84,7 @@ def get_album_tracks(albumUrl: str) -> List[SongObj]:
         if song.get_youtube_link() != None:
             albumTracks.append(song)
 
-    print(len(albumTracks))
+    print(f"Downloading {len(albumTracks)} songs")
     return albumTracks
 
 def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
@@ -112,7 +114,6 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
         offset += 100    
         # check if more tracks are to be passed
         if playlistResponse['next']:
-            print(f"fetching next, offset is {offset}")
             playlistResponse = spotifyClient.playlist_tracks(
                 playlistUrl,
                 offset = offset
@@ -124,12 +125,13 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
 
         if song.get_youtube_link() != None:
             playlistTracks.append(song)
+        else:
+            print("No Youtube link")
 
         
-    print(len(playlistTracks))
+    print(f"Downloading {len(playlistTracks)} songs")
     return playlistTracks
 
-#TODO: skip songs from the skip file
 def get_artist_tracks(artistUrl: str) -> List[SongObj]:
     '''
     `str` `artistUrl` : Spotify Url of the artist whose tracks are to be

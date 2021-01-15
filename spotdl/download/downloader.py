@@ -29,8 +29,8 @@ from spotdl.search.utils import path
 #=== Base functionality ===
 #==========================
 
-
-
+path = path
+skipfile = open(path, 'a')
 #===========================================================
 #=== The Download Manager (the tyrannical boss lady/guy) ===
 #===========================================================
@@ -44,6 +44,7 @@ class DownloadManager():
         # start a server for objects shared across processes
         self.displayManager = DisplayManager()
         self.downloadTracker = DownloadTracker()
+        self.skipfile = skipfile
 
         self.displayManager.clear()
 
