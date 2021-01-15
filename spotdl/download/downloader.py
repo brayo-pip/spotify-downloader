@@ -22,6 +22,7 @@ from typing import List
 from spotdl.search.songObj import SongObj
 from spotdl.download.progressHandlers import DisplayManager, DownloadTracker
 
+from spotdl.search.utils import path
 
 
 #==========================
@@ -342,3 +343,4 @@ class DownloadManager():
         tasks = [self._pool_download(song) for song in song_obj_list]
         # call all task asynchronously, and wait until all are finished
         self.loop.run_until_complete(asyncio.gather(*tasks))
+        self.skipfile.close()
