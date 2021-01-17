@@ -15,13 +15,13 @@ from typing import List
 
 from os import remove
 
-from spotdl.search.utils import path
+import spotdl.config
 
 
 #=================
 #=== The Patch ===
 #=================
-path = path
+path = spotdl.config.path
 skipfile = open(path,'a')
 originalAutoproxy = multiprocessing.managers.AutoProxy
 
@@ -266,7 +266,8 @@ class DownloadTracker():
 
         if songObj in self.songObjList:
             self.songObjList.remove(songObj)
-            skipfile.write("\n"+songObj.get_link())
+            if spotdl.config.skipFile:
+                skipfile.write("\n"+songObj.get_link())
         self.backup_to_disk()
     
     def clear(self):

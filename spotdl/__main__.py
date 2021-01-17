@@ -15,6 +15,7 @@ from multiprocessing import freeze_support
 #! used to quiet the output
 from io import StringIO as quiet
 import sys
+import spotdl.config
 
 #! Script Help
 help_notice = '''
@@ -72,6 +73,14 @@ def console_entry_point():
         sys.stdout = quiet()
         sys.stderr = quiet()
 
+    if '--no-skipfile' in cliArgs or '-ns' in cliArgs:
+        spotdl.config.skipFile = False
+        if "-ns" in cliArgs:
+            cliArgs.remove('-ns')
+        else:
+            cliArgs.remove('--no-skipfile')
+        print("No skip file...")
+
     initialize(
         clientId     = '4fe3fecfe5334023a1472516cc99d805',
         clientSecret = '0f02b7c483c04257984695007a4a8d5c'
@@ -115,7 +124,7 @@ def console_entry_point():
 
             with open(request, 'r') as songFile:
                 for songLink in songFile.readlines():
-                    song = SongObj.from_url(songLink)
+                    song = SongObj.from_url(songLink[:len(songLink)-1])
                     songObjList.append(song)
 
             downloader.download_multiple_songs(songObjList)

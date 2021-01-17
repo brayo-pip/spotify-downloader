@@ -3,8 +3,11 @@ from spotdl.search.songObj import SongObj
 
 from typing import List
 import bisect
+
+import spotdl.config
+
 # path = "C:/Users/Awesome/OneDrive/Documents/unique-links.txt"
-path = "C:/Users/Awesome/Google Drive/Desktop/unique-links.txt"
+path = spotdl.config.path
 file = open(path,'r')
 
 links =[line[:len(line)-1] for line in file]
@@ -35,7 +38,7 @@ def search_for_song(query: str) ->  SongObj:
     else:
         for songResult in result['tracks']['items']:
             songUrl = 'http://open.spotify.com/track/' + songResult['id']
-            if song_present(songUrl):
+            if song_present(songUrl) and spotdl.config.skipFile:
                 "song matches skipped, already in skip file"
                 continue
             song = SongObj.from_url(songUrl)
@@ -106,7 +109,7 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
     while True:
         for songEntry in playlistResponse['items']:
             url = 'https://open.spotify.com/track/' + songEntry['track']['id']
-            if song_present(url):
+            if song_present(url) and spotdl.config.skipFile:
                 # the link is present in the skip file
                 continue
             else:
