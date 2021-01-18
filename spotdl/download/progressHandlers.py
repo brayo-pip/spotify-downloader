@@ -15,13 +15,14 @@ from typing import List
 
 from os import remove
 
-import spotdl.config
+from spotdl.config import path, skipFile
 
 
 #=================
 #=== The Patch ===
 #=================
-path = spotdl.config.path
+path = path
+skipFile = skipFile
 skipfile = open(path,'a')
 originalAutoproxy = multiprocessing.managers.AutoProxy
 
@@ -30,7 +31,6 @@ def patchedAutoproxy(token, serializer, manager=None,
     '''
     A patch to `multiprocessing.managers.AutoProxy`
     '''
-
     #! we bypass the unwanted key argument here
     return originalAutoproxy(token, serializer, manager, authkey, exposed, incref)
 
@@ -266,7 +266,7 @@ class DownloadTracker():
 
         if songObj in self.songObjList:
             self.songObjList.remove(songObj)
-            if spotdl.config.skipFile:
+            if skipFile:
                 skipfile.write("\n"+songObj.get_link())
         self.backup_to_disk()
     

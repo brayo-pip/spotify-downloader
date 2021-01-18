@@ -2,12 +2,13 @@ from spotdl.search.spotifyClient import get_spotify_client
 from spotdl.search.songObj import SongObj
 
 from typing import List
-import bisect
+from bisect import bisect_left
 
-import spotdl.config
+from spotdl.config import path , skipFile
 
 # path = "C:/Users/Awesome/OneDrive/Documents/unique-links.txt"
-path = spotdl.config.path
+path = path
+skipFile = skipFile
 file = open(path,'r')
 
 links =[line[:len(line)-1] for line in file]
@@ -15,8 +16,8 @@ links =[line[:len(line)-1] for line in file]
 links.sort()
 
 def song_present(url: str):
-    if bisect.bisect_left(links,url) != len(links):
-        if links[bisect.bisect_left(links,url)] == url:
+    if bisect_left(links,url) != len(links):
+        if links[bisect_left(links,url)] == url:
             return True
     return False
 def search_for_song(query: str) ->  SongObj:
@@ -38,7 +39,7 @@ def search_for_song(query: str) ->  SongObj:
     else:
         for songResult in result['tracks']['items']:
             songUrl = 'http://open.spotify.com/track/' + songResult['id']
-            if song_present(songUrl) and spotdl.config.skipFile:
+            if song_present(songUrl) and skipFile:
                 "song matches skipped, already in skip file"
                 continue
             song = SongObj.from_url(songUrl)
@@ -109,7 +110,7 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
     while True:
         for songEntry in playlistResponse['items']:
             url = 'https://open.spotify.com/track/' + songEntry['track']['id']
-            if song_present(url) and spotdl.config.skipFile:
+            if song_present(url) and skipFile:
                 # the link is present in the skip file
                 continue
             else:
