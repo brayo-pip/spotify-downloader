@@ -24,6 +24,7 @@ spotdl.egg-info/*
 # setuptools and PyInstaller
 build
 dist
-
-# PyInstaller
 *.spec
+
+# Jetbrains IDEs; PyCharm/IntelliJ
+.idea

@@ -1,24 +1,19 @@
 # Which contributions get accepted and which ones don't?
 
-For the sake of maintainability and ease-of-use standards, we can not accept all contributions that
-come to spotDL - don't get us wrong, **ALL CONTRIBUTIONS ARE WELCOME...** So just which
+For the sake of maintainability and ease-of-use standards, we are not able to accept all contributions that come to spotDL - don't get us wrong, **ALL CONTRIBUTIONS ARE WELCOME...** So just which
 contributions get accepted and which ones don't? That's what we're here to answer.
 
 <br><br>
 
 # A short note to contributors
 
-1. Further on in this document, we use the term 'Users' interchangeably for both people who use
-spotDL as a command line tool and those who use spotDL as a library.
+1. Further on in this document, we use the term 'Users' interchangeably for both people who use spotDL as a command line tool and those who use spotDL as a library.
 
-2. These requirements are aimed at helping future contributors (people like you) more than its
-aimed at users, code quality and other such things.
+2. These requirements are aimed at helping future contributors (people like you) more than its aimed at users, code quality and other such things.
 
-3. Most of the requirements we need for a contribution to be accepted overlap with each other, so
-our 5-point requirements is more of a 3.5-point requirements.
+3. Most of the requirements we need for a contribution to be accepted overlap with each other, so our 5-point requirements is more of a 3.5-point requirements.
 
-4. Yes, there might be times when you can't both improve spotDL and stick to the requirements,
-in those rare cases, focus on improvement first and do your best ot meet the requirements.
+4. Yes, there might be times when you can't both improve spotDL and stick to the requirements, in those rare cases, focus on improvement first and do your best ot meet the requirements.
 Sometimes, you have to take a step back to take several forward.
 
 5. Most of the requirements are subjective to an extent. In your view, your code might meet the
@@ -154,4 +149,4 @@ will do their best to help you with your contributions.
         - spotDL v2 was far more feature rich than v3, what did 99% of users use spotDL for? To
         download songs. spotDL v3 got rid of all the additional, 'nice-to-have' features and
         focused solely on downloading songs. Some might even say that it's under-featured, we
-        can't really argue with that, but we have no intensions of changing that.
+        can't really argue with that, but we have no intentions of changing that.
