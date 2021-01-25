@@ -21,14 +21,14 @@ from typing import List
 
 from spotdl.search.songObj import SongObj
 from spotdl.download.progressHandlers import DisplayManager, DownloadTracker
-
+from spotdl.search.sessionClient import get_session
 from spotdl.search.utils import path
 
 
 #==========================
 #=== Base functionality ===
 #==========================
-
+ses = get_session() 
 path = path
 skipfile = open(path, 'a')
 #===========================================================
@@ -269,7 +269,7 @@ class DownloadManager():
         # ! setting the album art
         audioFile = ID3(convertedFilePath)
 
-        rawAlbumArt = get(songObj.get_album_cover_url()).content 
+        rawAlbumArt = ses.get(songObj.get_album_cover_url()).content 
 
         audioFile['APIC'] = AlbumCover(
             encoding=3,
@@ -289,7 +289,8 @@ class DownloadManager():
             self.downloadTracker.notify_download_completion(songObj)
 
         # delete the unnecessary YouTube download File
-        remove(downloadedFilePath)
+        if exists(downloadedFilePath):
+            remove(downloadedFilePath)
 
     def close(self) -> None:
         '''
@@ -328,7 +329,8 @@ class DownloadManager():
             # !
             # ! None is again used as a convenient exit
             fileName = join(tempFolder, convertedFileName) + '.mp4'
-            remove(fileName)
+            if exists(fileName):
+                remove(fileName)
             return None
 
     async def _pool_download(self, song_obj: SongObj):
