@@ -1,4 +1,4 @@
-# A file for syncing state across file
+# A file for syncing state across files
 # Solution to circular import errors
 
 skipFile = True
