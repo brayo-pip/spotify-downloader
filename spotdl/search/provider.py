@@ -1,7 +1,7 @@
 # ===============
 # === Imports ===
 # ===============
-
+import threading
 from datetime import timedelta
 from time import strptime
 # ! Just for static typing
@@ -117,7 +117,9 @@ def __query_and_simplify(searchTerm: str, explicit:bool) -> List[dict]:
     # build and POST a query to YTM
     # if explicit:
     #     searchTerm += ""
+    threading.Semaphore().acquire()
     print(f'Searching for: {searchTerm}')
+    threading.Semaphore().release()
     if explicit:
         searchResult = ytmApiClient.search(searchTerm, filter='videos')[:3]
     else:
