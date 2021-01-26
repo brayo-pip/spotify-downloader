@@ -1,3 +1,5 @@
+import concurrent.futures, threading
+
 from spotdl.search.spotifyClient import get_spotify_client
 from spotdl.search.songObj import SongObj
 
@@ -83,10 +85,13 @@ def get_album_tracks(albumUrl: str) -> List[SongObj]:
             )
         else:
             break
-    for url in albumUrls:
-        song = SongObj.from_url(url)
-        if song.get_youtube_link() != None:
-            albumTracks.append(song)
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for url in albumUrls:
+           futures.append(executor.submit(build_songObj,url))
+    for future in concurrent.futures.as_completed(futures):
+        if future.result() is not None:
+            albumTracks.append(future.result())
 
     print(f"Downloading {len(albumTracks)} songs")
     return albumTracks
@@ -124,17 +129,36 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
             )
         else:
             break
-    for url in playlistUrls:
-        song = SongObj.from_url(url)
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for url in playlistUrls:
+            futures.append(executor.submit(build_songObj,url))
 
-        if song.get_youtube_link() != None:
-            playlistTracks.append(song)
-        else:
-            print("No Youtube link")
+    for future in concurrent.futures.as_completed(futures):
+        # print("completed")
+        if future.result() is not None:
+            playlistTracks.append(future.result()) 
+    # for url in playlistUrls:
+    #     song = SongObj.from_url(url)
+
+    #     if song.get_youtube_link() != None:
+    #         playlistTracks.append(song)
+    #     else:
+    #         print("No Youtube link")
 
         
     print(f"Downloading {len(playlistTracks)} songs")
     return playlistTracks
+
+def build_songObj(url:str)->SongObj:
+    song = SongObj.from_url(url)
+    if song.get_youtube_link() != None:
+        return song
+    else:
+        threading.Semaphore().acquire()
+        print(f'No youtube link found for {url}')
+        threading.Semaphore().release()
+        return None
 
 def get_artist_tracks(artistUrl: str) -> List[SongObj]:
     '''
