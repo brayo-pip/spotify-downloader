@@ -13,17 +13,15 @@ class SongObj:
     #! This can be accessed as songObj.searchProvider. songObj acts like a namespace
     #! it allows us a convenient way of setting a search provider without using globals
     searchProvider = search_and_get_best_match
-    lyricProvider = Genius
 
     # ====================
     # === Constructors ===
     # ====================
-    def __init__(self, rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink,lyrics):
+    def __init__(self, rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink):
         self.__rawTrackMeta = rawTrackMeta
         self.__rawAlbumMeta = rawArtistMeta
         self.__rawArtistMeta = rawArtistMeta
         self.__youtubeLink = youtubeLink
-        self.__lyrics = lyrics
 
     #! constructors here are a bit mucky, there are two different constructors for two
     #! different use cases, hence the actual __init__ function does not exist
@@ -46,7 +44,6 @@ class SongObj:
 
         primaryArtistId = rawTrackMeta["artists"][0]["id"]
         rawArtistMeta = spotifyClient.artist(primaryArtistId)
-        primaryArtistName = rawArtistMeta["name"]
         albumId = rawTrackMeta["album"]["id"]
         rawAlbumMeta = spotifyClient.album(albumId)
 
@@ -65,10 +62,7 @@ class SongObj:
         youtubeLink = SongObj.searchProvider(
             songName, contributingArtists, albumName, duration , explicit = rawTrackMeta["explicit"] 
         )
-
-        lyrics = SongObj.lyricProvider().from_query(primaryArtistName,songName)
-        # lyrics = "lol"
-        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink, lyrics)
+        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink)
 
     @classmethod
     def from_dump(cls, dataDump: dict):
@@ -76,9 +70,8 @@ class SongObj:
         rawAlbumMeta = dataDump["rawAlbumMeta"]
         rawArtistMeta = dataDump["rawAlbumMeta"]
         youtubeLink = dataDump["youtubeLink"]
-        lyrics = dataDump["lyrics"]
 
-        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink,lyrics)
+        return cls(rawTrackMeta, rawAlbumMeta, rawArtistMeta, youtubeLink)
 
     def __eq__(self, comparedSong) -> bool:
         if comparedSong.get_data_dump() == self.get_data_dump():
@@ -229,15 +222,9 @@ class SongObj:
             "rawTrackMeta": self.__rawTrackMeta,
             "rawAlbumMeta": self.__rawAlbumMeta,
             "rawArtistMeta": self.__rawArtistMeta,
-            "lyrics": self.__lyrics,
         }
-    def fetch_lyrics(self)->str:
+    def get_lyrics(self)->str:
         """ fetches the lyrics from Genius"""
         songName = self.get_stripped_song_name()
         artistName = self.get_primary_artist_name()
         return Genius.from_query(song=songName,artist=artistName)
-    
-    def get_lyrics(self)->str:
-        """returns lyrics,(prefetched)"""
-        return self.__lyrics
-            
