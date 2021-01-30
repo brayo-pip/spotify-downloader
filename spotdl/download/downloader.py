@@ -250,7 +250,7 @@ class DownloadManager():
             audioFile['genre'] = genres[0]
 
         # ! all involved artists
-        audioFile['artist'] = songObj.get_contributing_artists()
+        audioFile['artist'] = songObj.get_primary_artist_name()
 
         # ! album name
         audioFile['album'] = songObj.get_album_name()
