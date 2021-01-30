@@ -6,12 +6,12 @@ import concurrent.futures
 import sys
 
 from os import mkdir, remove
-from os.path import join, exists
+from os.path import join, exists, abspath
 
 from pytube import YouTube
 
 from mutagen.easyid3 import EasyID3, ID3
-from mutagen.id3 import APIC as AlbumCover
+from mutagen.id3 import APIC as AlbumCover, ID3NoHeaderError
 from mutagen.id3 import USLT
 
 from requests import get
@@ -132,7 +132,6 @@ class DownloadManager():
 
         # ! we explicitly use the os.path.join function here to ensure download is
         # ! platform agnostic
-
         # Create a .\Temp folder if not present
         tempFolder = join('.', 'Temp')
 
@@ -162,74 +161,97 @@ class DownloadManager():
         convertedFileName = convertedFileName.replace('"', "'").replace(': ', ' - ')
 
         convertedFilePath = join('.', convertedFileName) + '.mp3'
-
+        addMetadata = False
+        absPath = abspath(convertedFilePath)
         # if a song is already downloaded skip it
         if exists(convertedFilePath):
+
+            try:
+                audioFile = EasyID3(absPath)
+            except ID3NoHeaderError:
+                tags = EasyID3()
+                # tags['title'] = songObj.get_song_name()
+                tags.save(absPath)
+                audioFile = EasyID3(absPath)
+            for i in ['title','tracknumber','artist','album','albumartist','date','originaldate']:
+                if audioFile.get(i) == None:
+                    addMetadata = True
+                    break
+            if addMetadata == False:
+                audioFile = ID3(absPath)
+                if len(audioFile.items())<=4:
+                    addMetadata = True
+            if addMetadata:
+                print(f'\n Embedding metadata for {songObj.get_song_name()}')
+            if addMetadata == False:
+                if self.displayManager:
+                    self.displayManager.notify_download_skip()
+                if self.downloadTracker:
+                    self.downloadTracker.notify_download_completion(songObj)
+
+                # ! None is the default return value of all functions, we just explicitly define
+                # ! it here as a continent way to avoid executing the rest of the function.
+                return None
+        if addMetadata == False:
+            # download Audio from YouTube
             if self.displayManager:
-                self.displayManager.notify_download_skip()
-            if self.downloadTracker:
-                self.downloadTracker.notify_download_completion(songObj)
+                youtubeHandler = YouTube(
+                    url=songObj.get_youtube_link(),
+                    on_progress_callback=self.displayManager.pytube_progress_hook
+                )
+            else:
+                youtubeHandler = YouTube(songObj.get_youtube_link())
 
-            # ! None is the default return value of all functions, we just explicitly define
-            # ! it here as a continent way to avoid executing the rest of the function.
-            return None
+            trackAudioStream = youtubeHandler.streams.get_audio_only()
 
-        # download Audio from YouTube
-        if self.displayManager:
-            youtubeHandler = YouTube(
-                url=songObj.get_youtube_link(),
-                on_progress_callback=self.displayManager.pytube_progress_hook
-            )
+            downloadedFilePath = await self._download_from_youtube(convertedFileName, tempFolder,
+                                                                trackAudioStream)
+            if downloadedFilePath is None:
+                return None
+
+            # convert downloaded file to MP3 with normalization
+
+            # ! -af loudnorm=I=-7:LRA applies EBR 128 loudness normalization algorithm with
+            # ! intergrated loudness target (I) set to -17, using values lower than -15
+            # ! causes 'pumping' i.e. rhythmic variation in loudness that should not
+            # ! exist -loud parts exaggerate, soft parts left alone.
+            # !
+            # ! dynaudnorm applies dynamic non-linear RMS based normalization, this is what
+            # ! actually normalized the audio. The loudnorm filter just makes the apparent
+            # ! loudness constant
+            # !
+            # ! apad=pad_dur=2 adds 2 seconds of silence toward the end of the track, this is
+            # ! done because the loudnorm filter clips/cuts/deletes the last 1-2 seconds on
+            # ! occasion especially if the song is EDM-like, so we add a few extra seconds to
+            # ! combat that.
+            # !
+            # ! -acodec libmp3lame sets the encoded to 'libmp3lame' which is far better
+            # ! than the default 'mp3_mf', '-abr true' automatically determines and passes the
+            # ! audio encoding bitrate to the filters and encoder. This ensures that the
+            # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
+            # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
+
+            command = f'ffmpeg -v quiet -hwaccel_output_format cuda -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2, dynaudnorm, loudnorm=I=-17" "{convertedFilePath}"'
+
+            process = await asyncio.subprocess.create_subprocess_shell(command)
+            _ = await process.communicate()
+
+            # ! Wait till converted file is actually created
+            while True:
+                if exists(convertedFilePath):
+                    break
+
+            if self.displayManager:
+                self.displayManager.notify_conversion_completion()
         else:
-            youtubeHandler = YouTube(songObj.get_youtube_link())
-
-        trackAudioStream = youtubeHandler.streams.get_audio_only()
-
-        downloadedFilePath = await self._download_from_youtube(convertedFileName, tempFolder,
-                                                               trackAudioStream)
-        if downloadedFilePath is None:
-            return None
-
-        # convert downloaded file to MP3 with normalization
-
-        # ! -af loudnorm=I=-7:LRA applies EBR 128 loudness normalization algorithm with
-        # ! intergrated loudness target (I) set to -17, using values lower than -15
-        # ! causes 'pumping' i.e. rhythmic variation in loudness that should not
-        # ! exist -loud parts exaggerate, soft parts left alone.
-        # !
-        # ! dynaudnorm applies dynamic non-linear RMS based normalization, this is what
-        # ! actually normalized the audio. The loudnorm filter just makes the apparent
-        # ! loudness constant
-        # !
-        # ! apad=pad_dur=2 adds 2 seconds of silence toward the end of the track, this is
-        # ! done because the loudnorm filter clips/cuts/deletes the last 1-2 seconds on
-        # ! occasion especially if the song is EDM-like, so we add a few extra seconds to
-        # ! combat that.
-        # !
-        # ! -acodec libmp3lame sets the encoded to 'libmp3lame' which is far better
-        # ! than the default 'mp3_mf', '-abr true' automatically determines and passes the
-        # ! audio encoding bitrate to the filters and encoder. This ensures that the
-        # ! sampled length of songs matches the actual length (i.e. a 5 min song won't display
-        # ! as 47 seconds long in your music player, yeah that was an issue earlier.)
-
-        command = f'ffmpeg -v quiet -hwaccel_output_format cuda -y -i "{downloadedFilePath}" -acodec libmp3lame -abr true -af "apad=pad_dur=2, dynaudnorm, loudnorm=I=-17" "{convertedFilePath}"'
-
-        process = await asyncio.subprocess.create_subprocess_shell(command)
-        _ = await process.communicate()
-
-        # ! Wait till converted file is actually created
-        while True:
-            if exists(convertedFilePath):
-                break
-
-        if self.displayManager:
-            self.displayManager.notify_conversion_completion()
+            if self.displayManager:
+                self.displayManager.notify_conversion_completion()
+            downloadedFilePath = None
 
         # embed song details
         # ! we save tags as both ID3 v2.3 and v2.4
-
         # ! The simple ID3 tags
-        audioFile = EasyID3(convertedFilePath)
+        audioFile = EasyID3(absPath)
 
         # ! Get rid of all existing ID3 tags (if any exist)
         audioFile.delete()
@@ -267,7 +289,7 @@ class DownloadManager():
         audioFile.save(v2_version=3)
 
         # ! setting the album art
-        audioFile = ID3(convertedFilePath)
+        audioFile = ID3(absPath)
 
         rawAlbumArt = ses.get(songObj.get_album_cover_url()).content 
 
@@ -278,6 +300,16 @@ class DownloadManager():
             desc='Cover',
             data=rawAlbumArt
         )
+        try:
+            # fetching lyrics can fail due to network issues, we can recover 
+            # from this and do it refetch them when running the code
+            lyrics = songObj.get_lyrics()
+            if lyrics == '':
+                lyrics = "Failed to fetch lyrics"
+            USLTOutput = USLT(encoding=3, lang=u'eng', desc=u'desc', text=lyrics)
+            audioFile["USLT::'eng'"] = USLTOutput
+        except:
+            print(f'failed to fetch lyrics for {songObj.get_song_name()}')
 
         audioFile.save(v2_version=3)
 
@@ -287,7 +319,10 @@ class DownloadManager():
 
         if self.downloadTracker:
             self.downloadTracker.notify_download_completion(songObj)
-
+        if addMetadata and self.displayManager:
+            self.displayManager.metadata_route_completion()
+        if downloadedFilePath == None:
+            return None
         # delete the unnecessary YouTube download File
         if exists(downloadedFilePath):
             remove(downloadedFilePath)
