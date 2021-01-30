@@ -130,6 +130,9 @@ class DisplayManager():
 
         #! Download completion implie ID# tag embedding was just finished
         self.progressBar.update(5)
+    def metadata_route_completion(self)-> None:
+
+        self.progressBar.update(90)
     
     def reset(self) -> None:
         '''
@@ -267,7 +270,7 @@ class DownloadTracker():
         if songObj in self.songObjList:
             self.songObjList.remove(songObj)
             if skipFile:
-                skipfile.write("\n"+songObj.get_link())
+                skipfile.write(songObj.get_link()+"\n")
         self.backup_to_disk()
     
     def clear(self):
