@@ -6,11 +6,13 @@ from spotdl.search.songObj import SongObj
 from typing import List
 from bisect import bisect_left
 
-from spotdl.config import path , skipFile
+import spotdl.config 
+
+import os.path
 
 # path = "C:/Users/Awesome/OneDrive/Documents/unique-links.txt"
-path = path
-skipFile = skipFile
+path = spotdl.config.path
+skipFile = spotdl.config.skipFile
 file = open(path,'r')
 
 links =[line[:len(line)-1] for line in file]
@@ -63,14 +65,15 @@ def get_album_tracks(albumUrl: str) -> List[SongObj]:
     albumTracks = []
     albumUrls = []
     trackResponse = spotifyClient.album_tracks(albumUrl)
-
+    global skipFile
+    skip = skipFile
     # while loop acts like do-while
     offset = 0
     while True:
 
         for track in trackResponse['items']:
             url = 'https://open.spotify.com/track/' + track['id']
-            if song_present(url):
+            if song_present(url) and skip:
                 # the link is present in the skip file
                 continue
             else:
@@ -109,13 +112,14 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
     playlistUrls = []
 
     playlistResponse = spotifyClient.playlist_tracks(playlistUrl)
-
+    global skipFile
+    skip = skipFile
     # while loop to mimic do-while
     offset = 0
     while True:
         for songEntry in playlistResponse['items']:
             url = 'https://open.spotify.com/track/' + songEntry['track']['id']
-            if song_present(url) and skipFile:
+            if song_present(url) and skip:
                 # the link is present in the skip file
                 continue
             else:
@@ -130,25 +134,38 @@ def get_playlist_tracks(playlistUrl: str) -> List[SongObj]:
         else:
             break
     futures = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         for url in playlistUrls:
             futures.append(executor.submit(build_songObj,url))
 
     for future in concurrent.futures.as_completed(futures):
-        # print("completed")
         if future.result() is not None:
             playlistTracks.append(future.result()) 
-    # for url in playlistUrls:
-    #     song = SongObj.from_url(url)
-
-    #     if song.get_youtube_link() != None:
-    #         playlistTracks.append(song)
-    #     else:
-    #         print("No Youtube link")
 
         
     print(f"Downloading {len(playlistTracks)} songs")
     return playlistTracks
+
+def get_textfile_tracks(filename:str) -> List[SongObj]:
+    if os.path.exists(filename):
+        file = open(filename,'r')
+        links = [link[:-1] for link in file]
+        links.pop()
+        futures = []
+        textfileTracks = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            for index in range(len(links)-800,len(links)-700):
+                futures.append(executor.submit(build_songObj,links[index]))
+
+        for future in concurrent.futures.as_completed(futures):
+            # print("completed")
+            if future.result() is not None:
+                textfileTracks.append(future.result())
+        print(f"Downloading {len(textfileTracks)} songs")
+        return textfileTracks
+    else:
+        print('file does not exist')
+        return None
 
 def build_songObj(url:str)->SongObj:
     song = SongObj.from_url(url)
@@ -156,7 +173,7 @@ def build_songObj(url:str)->SongObj:
         return song
     else:
         threading.Semaphore().acquire()
-        print(f'No youtube link found for {url}')
+        print(f'No youtube link found for {song.get_primary_artist_name()} {song.get_song_name()}')
         threading.Semaphore().release()
         return None
 
