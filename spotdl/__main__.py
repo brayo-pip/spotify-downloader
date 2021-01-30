@@ -3,7 +3,7 @@ from spotdl.search.spotifyClient import initialize
 from sys import argv as cliArgs
 
 #! Song Search from different start points
-from spotdl.search.utils import get_playlist_tracks, get_album_tracks, search_for_song, get_artist_tracks
+from spotdl.search.utils import get_playlist_tracks, get_album_tracks, search_for_song, get_artist_tracks, get_textfile_tracks
 from spotdl.search.songObj import SongObj
 
 #! The actual download stuff
@@ -121,11 +121,7 @@ def console_entry_point():
         elif request.endswith('.txt'):
             print('Fetching songs from %s...' % request)
             songObjList = []
-
-            with open(request, 'r') as songFile:
-                for songLink in songFile.readlines():
-                    song = SongObj.from_url(songLink[:len(songLink)-1])
-                    songObjList.append(song)
+            songObjList = get_textfile_tracks(request)
 
             downloader.download_multiple_songs(songObjList)
 
