@@ -154,8 +154,8 @@ def get_textfile_tracks(filename:str) -> List[SongObj]:
         futures = []
         textfileTracks = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            for index in range(len(links)-800,len(links)-700):
-                futures.append(executor.submit(build_songObj,links[index]))
+            for url in links:
+                futures.append(executor.submit(build_songObj,url))
 
         for future in concurrent.futures.as_completed(futures):
             # print("completed")
